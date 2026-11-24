@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; worker-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>RC2000 Intake Lab</title>
+<link rel="stylesheet" href="style.css">
+<script defer src="src/engines/model.js"></script>
+<script defer src="src/engines/coverage.js"></script>
+<script defer src="src/app.js"></script>
+<script defer src="src/coverage-ui.js"></script>
+</head>
+<body>
+<header><div class="bar">
+  <a class="brand" href="#lab"><img src="rc2000-logo.png" alt="" width="36" height="36"><span>Reading Club <b>2000</b></span></a>
+  <nav aria-label="Sections"><a href="#scenarios">Scenarios</a><a href="#lab">Lab</a><a href="#codex">Codex</a></nav>
+  <button id="theme" type="button">Dark mode</button>
+</div></header>
+<main>
+  <div class="intro">
+    <div class="intro-copy"><p class="eyebrow">Quantitative Modeling &amp; Simulation</p>
+      <h1>Reading Club 2000 <em>Intake Lab</em></h1>
+      <p>Explore how a volunteer desk handles donation and inquiry submissions as demand, staffing, and screening change.</p>
+      <div class="hero-actions"><a class="primary" href="#scenarios">Explore scenarios</a><a class="secondary" href="#lab">Open lab</a></div>
+    </div>
+    <div class="hero-flow" aria-label="Intake workflow">
+      <p class="eyebrow">Intake workflow</p>
+      <ol><li><span>01</span><div><strong>Submission</strong><small>Donation or inquiry form</small></div></li>
+      <li><span>02</span><div><strong>Volunteer desk</strong><small>Finite queue and review</small></div></li>
+      <li><span>03</span><div><strong>Screening outcome</strong><small>Held or missed</small></div></li></ol>
+    </div>
+  </div>
+  <section id="lab" aria-labelledby="lab-title" hidden>
+    <div class="section-head"><h2 id="lab-title">Simulation workbench</h2><button id="verify" type="button">Verify model</button></div>
+    <div class="workbench">
+      <aside class="panel controls"><h3>Desk settings</h3><div id="inputs"></div><button id="reset" type="button">Reset baseline</button></aside>
+      <div class="results">
+        <div id="metrics" class="metrics" aria-label="Steady-state estimates"></div>
+        <div class="panel plot"><div class="section-head"><div><h3>Volunteer review desk</h3><p id="desk-status"></p></div><button id="pause" type="button">Pause</button></div><canvas id="desk" role="img" aria-label="Animated desk and queue showing simulated submissions"></canvas><p class="note">One replayable sample path. Each tile represents a submission.</p></div>
+        <div class="lower"><div class="panel plot"><h3>Screening outcomes</h3><canvas id="states" role="img" aria-label="Markov state distribution over successive review steps"></canvas><p id="state-status" class="note"></p></div><div class="panel plot"><h3>Annual incident loss</h3><canvas id="risk" role="img" aria-label="Histogram of annual losses across 10,000 synthetic years"></canvas><p id="risk-status" class="note" aria-live="polite"></p></div></div>
+      </div>
+    </div>
+    <div id="coverage-controls" class="lower coverage">
+      <article class="panel plot"><h3>Intake reference strength</h3>
+        <label>Alphabet size <select id="alphabet"><option value="10">10 digits</option><option value="36" selected>36 letters and digits</option><option value="62">62 case-sensitive characters</option></select></label>
+        <label>Reference length <select id="token-length"><option>6</option><option selected>8</option><option>10</option></select></label>
+        <label>Allowed checks per second <select id="guess-limit"><option>1</option><option>5</option><option>10</option></select></label>
+        <output id="entropy-output"></output>
+      </article>
+      <article class="panel plot"><h3>Random review policy</h3>
+        <label>Review cost (points) <select id="audit-cost"><option>50</option><option selected>100</option><option>150</option></select></label>
+        <label>Penalty for detected misuse (points) <select id="review-penalty"><option>100</option><option selected>200</option><option>400</option></select></label>
+        <p class="note" id="game-payoff"></p><output id="game-output"></output>
+      </article>
+      <article class="panel plot"><h3>Submission-volume anomaly</h3>
+        <label>Replay trace <select id="telemetry-mode"><option value="normal">Routine intake</option><option value="surge">Sudden submission spike</option></select></label>
+        <label>Alert threshold τ <output id="threshold-value"></output> <input id="threshold" type="range" min="1" max="8" step="0.5" value="3"></label>
+        <button id="replay-telemetry" type="button">Replay trace</button>
+        <canvas id="telemetry-chart" role="img" aria-label="Submission counts and the current rolling-window threshold bounds"></canvas>
+        <p class="note" id="telemetry-output"></p>
+      </article>
+      <article class="panel plot"><h3>Form service availability</h3>
+        <label>Host mean time between failures (hours) <select id="host-mtbf"><option>120</option><option selected>360</option><option>720</option></select></label>
+        <label>Mean repair time (hours) <select id="host-mttr"><option>1</option><option selected>4</option><option>12</option></select></label>
+        <label><input id="backup-host" type="checkbox"> Include an independent backup host</label>
+        <output id="reliability-output"></output>
+      </article>
+    </div>
+  </section>
+  <section id="scenarios" aria-labelledby="scenario-title">
+    <div class="section-head"><h2 id="scenario-title">Scenarios</h2></div>
+    <div id="episode-buttons" class="episode-buttons"></div>
+    <div class="panel scenario"><h3 id="episode-title"></h3><p id="episode-story"></p><fieldset><legend>Choose how the desk responds</legend><div id="choices"></div></fieldset>
+    <div class="table-wrap"><table><caption>Before and after the selected response</caption><thead><tr><th>Measure</th><th>Before</th><th>After</th></tr></thead><tbody id="comparison"></tbody></table></div>
+    <canvas id="compare-chart" role="img" aria-label="Comparison of submissions blocked before and after mitigation"></canvas>
+    <button id="open-lab" type="button">Explore selected response in Lab</button></div>
+  </section>
+  <section id="codex" aria-labelledby="codex-title" hidden>
+    <h2 id="codex-title">Model Codex</h2>
+    <div class="topic-grid">
+      <a class="topic" href="#codex" data-topic="queue-reference"><span>Modules 1 &amp; 3</span><strong>Stochastic arrivals</strong><p>Model the time between submissions.</p><code>E[T] = 1/λ</code></a>
+      <a class="topic" href="#codex" data-topic="queue-reference"><span>Module 6</span><strong>Queueing theory</strong><p>Estimate waits and intake blocking.</p><code>Lq = λₑ · Wq</code></a>
+      <a class="topic" href="#codex" data-topic="markov-reference"><span>Module 5</span><strong>Markov screening</strong><p>Track held and missed outcomes.</p><code>pₜ₊₁ = pₜ · P</code></a>
+      <a class="topic" href="#codex" data-topic="risk-reference"><span>Module 4</span><strong>Monte Carlo risk</strong><p>Estimate annual incident costs.</p><code>E[L] = f · (1 − q) · E[C]</code></a>
+      <a class="topic" href="#codex" data-topic="entropy-reference"><span>Modules 2 &amp; 10</span><strong>Reference entropy</strong><p>Compare synthetic reference policies.</p><code>H = log₂(S)</code></a>
+      <a class="topic" href="#codex" data-topic="game-reference"><span>Module 7</span><strong>Game theory</strong><p>Compare review cost and misuse incentives.</p><code>p = G / (G + F)</code></a>
+      <a class="topic" href="#codex" data-topic="anomaly-reference"><span>Module 11</span><strong>Anomaly detection</strong><p>Flag unusual submission volume.</p><code>Z = |x − μ| / σ</code></a>
+      <a class="topic" href="#codex" data-topic="availability-reference"><span>Module 12</span><strong>Availability</strong><p>Compare one host with an independent backup.</p><code>A = MTBF / (MTBF + MTTR)</code></a>
+    </div>
+    <div class="reference">
+      <details id="queue-reference" open><summary>Poisson arrivals and the finite queue</summary>
+      <p>Submissions arrive at rate λ per minute. Independent gaps have density f(t) = λ · exp(−λt) and expected length 1/λ minutes. Each of c volunteers completes reviews at exponential rate μ per minute. Waiting requests enter service in arrival order. K counts both waiting and active submissions.</p>
+      <p>Set w₀ = 1 and compute wₙ = wₙ₋₁ · λ / [min(n, c) · μ]. Normalize by the sum of weights to get Pₙ. A submission is blocked with probability Pₖ. Admitted throughput λₑ = λ · (1 − Pₖ). Average queue length Lq = Σ max(0, n − c) · Pₙ, so mean wait Wq = Lq / λₑ. Wait excludes service time.</p>
+      <p>The snapshots start with an empty desk. Headline queue metrics describe steady state, including overload because capacity is finite.</p></details>
+      <details id="markov-reference"><summary>Absorbing screening chain</summary><p>For synthetic suspicious submissions, New stays New with probability 0.20 or enters Review with probability 0.80. Review stays in Review with probability 0.25. On exit, a fraction q is Held and the rest is Missed. Both outcomes are absorbing. Each step updates the row vector pₜ₊₁ = pₜ · P, starting from (1, 0, 0, 0).</p><p>The expected steps to absorption are 1/0.80 + 1/0.75 ≈ 2.58. Terminal held probability is q. Steps are screening decisions with no fixed duration.</p></details>
+      <details id="risk-reference"><summary>FAIR-inspired loss model</summary><p>Generate 10,000 synthetic years. Potential incidents have Poisson frequency f per year. Independent screening thins that count to Poisson(f · (1 − q)). Each missed incident costs ₱4,000 · exp(0.6Z), with Z standard normal. Costs are hypothetical response and recovery expenses.</p><p>Annual loss expectancy is the mean of simulated yearly totals. The 95th percentile is the nearest-rank value. The analytic mean is f · (1 − q) · ₱4,000 · exp(0.6²/2). This simplified model uses fixed input frequency and independent losses. It represents neither assessed costs nor legal fines.</p></details>
+      <details id="entropy-reference"><summary>Reference entropy and rate limiting</summary><p>A synthetic reference has L independent uniform characters drawn from an alphabet of size A. That gives S = Aᴸ possible values and Shannon entropy H = log₂(S) bits. Under uniformly ordered, distinct checks, the average position is (S + 1)/2. A cap of r checks per second gives expected time (S + 1)/(2r). The Lab models an idealized reference policy using aggregate mathematics.</p></details>
+      <details id="game-reference"><summary>Mixed strategy for random review</summary><p>A submitter chooses genuine or misuse. Misuse earns G points if skipped and incurs penalty F if reviewed. Reviewing costs C points. A successful interception credits the desk F points and a missed misuse costs the desk G. Indifference gives review probability p = G/(G + F) and abuse probability q = C/(G + F). The Lab fixes G at 300 points and keeps 0 &lt; C &lt; G + F. Payoffs are hypothetical.</p></details>
+      <details id="anomaly-reference"><summary>Sliding-window submission anomalies</summary><p>Use the previous six one-minute counts to compute population mean μ and standard deviation σ. Flag a current count x when Z = |x − μ|/σ ≥ τ. With zero variance, an unchanged count scores zero and any change is flagged. The dashed lines show the current window’s thresholds, with the lower bound clipped to zero for display. A flag prompts review and can also reflect a legitimate book-drive surge.</p></details>
+      <details id="availability-reference"><summary>Series and parallel availability</summary><p>MTBF and MTTR are hours. Inherent component availability is MTBF/(MTBF + MTTR). The shared upstream link is in series with hosting, so multiply their availabilities. Independent identical hosts operating in parallel give hosting availability 1 − (1 − A)² under immediate failover. Expected unavailable hours per year are 8,760 · (1 − Aₛᵧₛ). A shared upstream outage affects both hosts.</p></details>
+      <details><summary>Privacy and defensive controls</summary><p>For a real donation or inquiry workflow, RA 10173 Section 11 informs limiting data collection and retention to the stated purpose. Section 20 informs proportionate safeguards for submission records, including staff access restrictions and incident handling. Here, screening is represented by bounded scenario parameters and the simulator processes synthetic data.</p><p><a href="https://privacy.gov.ph/data-privacy-act/">National Privacy Commission · Republic Act 10173</a></p></details>
+    </div>
+  </section>
+</main>
+<footer>RC2000 Intake Lab <span>Standalone academic simulation</span></footer>
+<dialog id="drawer" aria-labelledby="drawer-title"><div class="section-head"><h2 id="drawer-title">Verification &amp; validation</h2><button id="close" type="button">Close</button></div><p>Seeded benchmark cases and analytic invariants.</p><ul id="checks"></ul><button id="rerun" type="button">Run checks again</button></dialog>
+</body></html>
+
